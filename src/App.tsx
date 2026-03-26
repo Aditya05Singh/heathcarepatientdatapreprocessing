@@ -3,8 +3,14 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Index from "./pages/Index";
+import SampleData from "./pages/SampleData";
+import MissingValues from "./pages/MissingValues";
+import RiskScore from "./pages/RiskScore";
+import Binning from "./pages/Binning";
+import DataSplitting from "./pages/DataSplitting";
+import ModelAccuracy from "./pages/ModelAccuracy";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -16,7 +22,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/sample-data" element={<SampleData />} />
+          <Route path="/missing-values" element={<MissingValues />} />
+          <Route path="/risk-score" element={<RiskScore />} />
+          <Route path="/binning" element={<Binning />} />
+          <Route path="/data-splitting" element={<DataSplitting />} />
+          <Route path="/model-accuracy" element={<ModelAccuracy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
