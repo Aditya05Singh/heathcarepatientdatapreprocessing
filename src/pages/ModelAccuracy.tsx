@@ -3,23 +3,27 @@ import { Brain } from "lucide-react";
 import PageLayout from "@/components/PageLayout";
 import DataTable from "@/components/DataTable";
 import ResultCard from "@/components/ResultCard";
-import { sampleDataset } from "@/lib/sampleData";
+import PatientForm, { type PatientData } from "@/components/PatientForm";
+import { sampleDataset, patientHeaders, patientToRow } from "@/lib/sampleData";
 
-// Simple decision tree simulation for classification
 const classify = (bp: number, chol: number, bmi: number): string => {
   const score = 0.3 * bp + 0.3 * chol + 0.4 * bmi;
   return score > 110 ? "Heart" : "Healthy";
 };
 
 const ModelAccuracy = () => {
+  const [dataset, setDataset] = useState<PatientData[]>([...sampleDataset]);
   const [result, setResult] = useState<{
     accuracy: number;
     bestParams: Record<string, number | string>;
     report: { class: string; precision: number; recall: number; f1: number; support: number }[];
   } | null>(null);
 
+  const handleAdd = (data: PatientData) => {
+    setDataset((prev) => [...prev, data]);
+  };
+
   const handleRun = () => {
-    // Simulate GridSearchCV with Random Forest
     const paramGrid = [
       { n_estimators: 100, max_depth: 5 },
       { n_estimators: 200, max_depth: 10 },
@@ -27,15 +31,13 @@ const ModelAccuracy = () => {
       { n_estimators: 100, max_depth: 10 },
     ];
 
-    // Simulate cross-validation scores for each param combo
     const scores = paramGrid.map((params) => {
       let correct = 0;
-      sampleDataset.forEach((d) => {
+      dataset.forEach((d) => {
         const pred = classify(d.bloodPressure!, d.cholesterol!, d.bmi!);
         if (pred === d.diagnosis) correct++;
       });
-      // Add some variance based on params
-      const base = correct / sampleDataset.length;
+      const base = correct / dataset.length;
       const noise = (params.max_depth - 5) * 0.01 + (params.n_estimators - 100) * 0.0005;
       return Math.min(0.99, Math.max(0.7, base + noise));
     });
@@ -44,11 +46,10 @@ const ModelAccuracy = () => {
     const bestParams = paramGrid[bestIdx];
     const accuracy = Math.round(scores[bestIdx] * 10000) / 100;
 
-    // Classification report
-    const tp = sampleDataset.filter((d) => d.diagnosis === "Heart" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Heart").length;
-    const fp = sampleDataset.filter((d) => d.diagnosis === "Healthy" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Heart").length;
-    const fn = sampleDataset.filter((d) => d.diagnosis === "Heart" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Healthy").length;
-    const tn = sampleDataset.filter((d) => d.diagnosis === "Healthy" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Healthy").length;
+    const tp = dataset.filter((d) => d.diagnosis === "Heart" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Heart").length;
+    const fp = dataset.filter((d) => d.diagnosis === "Healthy" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Heart").length;
+    const fn = dataset.filter((d) => d.diagnosis === "Heart" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Healthy").length;
+    const tn = dataset.filter((d) => d.diagnosis === "Healthy" && classify(d.bloodPressure!, d.cholesterol!, d.bmi!) === "Healthy").length;
 
     const heartPrecision = tp / (tp + fp) || 0;
     const heartRecall = tp / (tp + fn) || 0;
@@ -74,14 +75,20 @@ const ModelAccuracy = () => {
     >
       <div className="space-y-6">
         <div className="bg-card border border-border rounded-xl p-5 shadow-card">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Random Forest Classifier with Hyperparameter Tuning</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Runs GridSearchCV over the sample dataset to find optimal parameters.
-          </p>
+          <h3 className="text-sm font-semibold text-foreground mb-4">Add Patient to Dataset ({dataset.length} records)</h3>
+          <PatientForm onSubmit={handleAdd} submitLabel="Add to Dataset" />
+        </div>
+
+        <div className="flex gap-3">
           <button onClick={handleRun} className="gradient-primary text-primary-foreground px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition shadow-glow-primary">
             Run Model Training
           </button>
+          <button onClick={() => setDataset([...sampleDataset])} className="bg-secondary text-secondary-foreground px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-80 transition">
+            Reset Dataset
+          </button>
         </div>
+
+        <DataTable title={`Current Dataset (${dataset.length} records)`} headers={patientHeaders} rows={dataset.map(patientToRow)} />
 
         {result && (
           <>
