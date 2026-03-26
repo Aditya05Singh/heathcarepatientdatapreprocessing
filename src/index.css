@@ -112,3 +112,7 @@
     background: hsl(220 18% 14% / 0.8);
   }
 }
+
+#lovable-badge {
+  display: none !important;
+}
